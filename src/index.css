@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Inter:wght@200;300;400&family=Tiro+Devanagari+Sanskrit&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@100;200;300;400&family=Tiro+Devanagari+Sanskrit&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -6,11 +6,39 @@
   --font-sans: "Inter", sans-serif;
   --font-sanskrit: "Tiro Devanagari Sanskrit", serif;
   
-  --color-shanti-bg: #F2EFE9;
-  --color-shanti-ink: #2C2825;
-  --color-shanti-gold: #C2A878;
-  --color-shanti-sage: #B4BFA2;
-  --color-shanti-sand: #D5CEC4;
+  --color-shanti-bg: var(--theme-bg);
+  --color-shanti-ink: var(--theme-ink);
+  --color-shanti-gold: var(--theme-gold);
+  --color-shanti-sage: var(--theme-sage);
+  --color-shanti-sand: var(--theme-sand);
+}
+
+:root {
+  /* Dark Theme (Default) */
+  --theme-bg: #0A0A0A;
+  --theme-ink: #F2EFE9;
+  --theme-gold: #D4AF37;
+  --theme-sage: #181A18;
+  --theme-sand: #11100F;
+  --theme-grad-1: #FFFFFF;
+  --theme-glass-bg: rgba(18, 18, 18, 0.5);
+  --theme-glass-border: rgba(212, 175, 55, 0.15);
+  --theme-glass-shadow: rgba(0, 0, 0, 0.6);
+  --theme-blur: 30px;
+}
+
+:root.light-mode {
+  /* Light Theme */
+  --theme-bg: #F2EFE9;
+  --theme-ink: #2C2825;
+  --theme-gold: #C2A878;
+  --theme-sage: #B4BFA2;
+  --theme-sand: #D5CEC4;
+  --theme-grad-1: var(--theme-ink);
+  --theme-glass-bg: rgba(242, 239, 233, 0.4);
+  --theme-glass-border: rgba(255, 255, 255, 0.4);
+  --theme-glass-shadow: rgba(0, 0, 0, 0.05);
+  --theme-blur: 12px;
 }
 
 body {
@@ -32,20 +60,20 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-shanti-sand);
+  background: var(--color-shanti-gold);
   border-radius: 10px;
 }
 
 .glass {
-  background: rgba(242, 239, 233, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+  background: var(--theme-glass-bg);
+  backdrop-filter: blur(var(--theme-blur));
+  -webkit-backdrop-filter: blur(var(--theme-blur));
+  border: 1px solid var(--theme-glass-border);
+  box-shadow: 0 40px 80px var(--theme-glass-shadow);
 }
 
 .grad-text {
-  background: linear-gradient(to right, var(--color-shanti-ink), var(--color-shanti-gold));
+  background: linear-gradient(135deg, var(--theme-grad-1), var(--color-shanti-gold));
   -webkit-background-clip: text;
   color: transparent;
 }
