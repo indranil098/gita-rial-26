@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect, useRef } from "react";
 
 // Fallback Gita Data
@@ -60,16 +60,11 @@ const PHILOSOPHIES = [
 ];
 
 export default function App() {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [chapters, setChapters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDark, setIsDark] = useState(true);
-
-  // Track scroll position for the whole 1200vh container
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
+  const [view, setView] = useState<'home' | 'chapters'>('home');
+  const [activeChapter, setActiveChapter] = useState<any>(null);
 
   useEffect(() => {
     if (isDark) {
@@ -90,57 +85,17 @@ export default function App() {
       .finally(() => setLoading(false));
   }, []);
 
-  const [activeChapter, setActiveChapter] = useState<any>(null);
-
-  // Hero Animations (0 - 0.15)
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.1, 0.15], [1, 1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 20]);
-  const heroBlur = useTransform(
-    scrollYProgress,
-    [0, 0.15],
-    ["blur(0px)", "blur(20px)"],
-  );
-
-  // Philosophy Animations (0.15 - 0.5)
-  const getPhilTransform = (index: number) => {
-    const start = 0.15 + index * 0.1;
-    const peak = start + 0.05;
-    const end = peak + 0.1;
-    return {
-      opacity: useTransform(
-        scrollYProgress,
-        [start, peak, end - 0.05, end],
-        [0, 1, 1, 0],
-      ),
-      z: useTransform(scrollYProgress, [start, end], [-1000, 500]),
-      rotateX: useTransform(scrollYProgress, [start, end], [45, -20]),
-    };
-  };
-
-  // Gita Horizon (0.5 - 0.9)
-  const gitaOpacity = useTransform(
-    scrollYProgress,
-    [0.45, 0.5, 0.9, 0.95],
-    [0, 1, 1, 0],
-  );
-  const gitaX = useTransform(scrollYProgress, [0.45, 0.9], ["60vw", "-550vw"]);
-  const gitaZ = useTransform(scrollYProgress, [0.45, 0.5], [-500, 0]);
-
-  // Footer (0.9 - 1.0)
-  const footerOpacity = useTransform(scrollYProgress, [0.9, 1], [0, 1]);
-  const footerY = useTransform(scrollYProgress, [0.9, 1], [100, 0]);
-
   return (
-    <div
-      ref={containerRef}
-      className="h-[800vh] md:h-[1800vh] relative w-full bg-shanti-bg text-shanti-ink selection:bg-shanti-gold/20 selection:text-shanti-ink font-sans transition-colors duration-500"
-    >
+    <div className="min-h-screen relative w-full bg-shanti-bg text-shanti-ink selection:bg-shanti-gold/20 selection:text-shanti-ink font-sans transition-colors duration-500">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 w-full p-8 z-50 flex justify-between items-center pointer-events-none">
-        <span className="text-xs tracking-[0.4em] uppercase font-light opacity-80 pointer-events-auto">
+      <nav className="fixed top-0 left-0 w-full p-6 md:p-8 z-50 flex justify-between items-center bg-shanti-bg/80 backdrop-blur-md border-b border-shanti-gold/10">
+        <button 
+          onClick={() => { setView('home'); window.scrollTo(0,0); }}
+          className="text-xs tracking-[0.4em] uppercase font-light opacity-80 hover:opacity-100 transition-opacity"
+        >
           प्रशान्ति
-        </span>
-        <div className="flex gap-6 pointer-events-auto items-center">
+        </button>
+        <div className="flex gap-6 items-center">
           <button
             onClick={() => setIsDark(!isDark)}
             className="p-3 rounded-full hover:bg-shanti-ink/5 transition-colors group"
@@ -159,226 +114,234 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Fixed 3D Viewport window */}
-      <motion.div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center [transform-style:preserve-3d] [perspective:1400px]">
-        {/* Aesthetic Background Sub-layers */}
-        <div
-          className="absolute inset-0 z-0 opacity-[0.04] pointer-events-none mix-blend-multiply hidden md:block"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-          }}
-        />
+      {/* Shared Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none hidden md:block opacity-[0.04] mix-blend-multiply" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 180, repeat: Infinity, ease: "linear" }}
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] max-w-[2000px] max-h-[2000px] z-0 pointer-events-none will-change-transform transform-gpu opacity-50"
+      >
+        <div className="absolute top-[10%] right-[20%] w-[40vw] h-[40vw] bg-shanti-gold/10 rounded-full mix-blend-multiply filter blur-[100px] md:blur-[120px]" />
+        <div className="absolute bottom-[10%] left-[20%] w-[45vw] h-[45vw] bg-shanti-sage/10 rounded-full mix-blend-multiply filter blur-[120px] md:blur-[140px]" />
+      </motion.div>
 
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
-          className="absolute flex items-center justify-center w-[150vw] h-[150vw] max-w-[2000px] max-h-[2000px] z-0 pointer-events-none will-change-transform transform-gpu"
-        >
-          <div className="absolute top-[10%] right-[20%] w-[40vw] h-[40vw] bg-shanti-gold/15 rounded-full mix-blend-multiply filter blur-[100px] md:blur-[120px]" />
-          <div className="absolute bottom-[10%] left-[20%] w-[45vw] h-[45vw] bg-shanti-sage/15 rounded-full mix-blend-multiply filter blur-[120px] md:blur-[140px]" />
-        </motion.div>
-
-        <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none opacity-[0.02]">
-          <span className="sanskrit text-[120vh] text-shanti-ink select-none leading-none drop-shadow-sm">
-            ॐ
-          </span>
-        </div>
-
-        {/* HERO SECTION */}
-        <motion.section
-          style={{
-            opacity: heroOpacity,
-            scale: heroScale,
-            filter: heroBlur,
-            pointerEvents: useTransform(heroOpacity, (val) =>
-              val > 0 ? "auto" : "none",
-            ),
-          }}
-          className="absolute inset-0 flex flex-col items-center justify-center [transform-style:preserve-3d]"
-        >
-          <div
-            className="text-center"
-            style={{ transform: "translateZ(50px)" }}
-          >
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 3, ease: "easeOut" }}
-              className="sanskrit text-6xl md:text-9xl text-shanti-ink mb-6 drop-shadow-2xl font-normal"
-            >
-              प्रशान्ति
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
-              transition={{ delay: 1, duration: 2 }}
-              className="text-xs md:text-sm tracking-[1em] uppercase font-light"
-            >
-              Supreme Peace
-            </motion.p>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2, duration: 2 }}
-            className="absolute bottom-12 flex flex-col items-center"
-          >
-            <button
-              onClick={() => {
-                window.scrollTo({
-                  top: window.innerHeight * 1.5,
-                  behavior: "smooth",
-                });
-              }}
-              className="group flex flex-col items-center gap-6 cursor-pointer"
-            >
-              <div className="text-[10px] tracking-[0.5em] uppercase font-medium opacity-50 group-hover:opacity-100 group-hover:text-shanti-gold transition-all duration-500">
-                Begin Journey
-              </div>
-              <div className="relative flex items-center justify-center w-12 h-12 rounded-full border border-shanti-ink/20 group-hover:border-shanti-gold/50 group-hover:bg-shanti-gold/5 transition-all duration-500">
-                <motion.div
-                  animate={{ y: [-2, 4, -2] }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  className="w-[1px] h-5 bg-shanti-ink/50 group-hover:bg-shanti-gold transition-colors duration-500"
-                />
-              </div>
-            </button>
-          </motion.div>
-        </motion.section>
-
-        {/* PHILOSOPHY PATHS (3D Scroll sequence) */}
-        {PHILOSOPHIES.map((phil, i) => {
-          const transforms = getPhilTransform(i);
-          return (
-            <motion.div
-              key={i}
-              style={{
-                opacity: transforms.opacity,
-                z: transforms.z,
-                rotateX: transforms.rotateX,
-                pointerEvents: useTransform(transforms.opacity, (val) =>
-                  val > 0.5 ? "auto" : "none",
-                ),
-              }}
-              className="absolute inset-0 flex items-center justify-center pointer-events-none"
-            >
-              <div className="max-w-2xl px-6 text-center glass rounded-2xl p-12 lg:p-24 shadow-2xl">
-                <h2 className="sanskrit text-5xl md:text-7xl mb-4 grad-text font-normal">
-                  {phil.sanskrit}
-                </h2>
-                <h3 className="font-serif text-xl md:text-3xl mb-8 opacity-80">
-                  {phil.name}
-                </h3>
-                <div className="w-12 h-[1px] bg-shanti-ink/20 mx-auto mb-8" />
-                <p className="text-lg md:text-xl font-light italic leading-relaxed opacity-70">
-                  "{phil.text}"
-                </p>
-              </div>
+      <div className="relative z-10 w-full pt-20">
+        <AnimatePresence mode="wait">
+          {view === 'home' && (
+            <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <HomeView 
+                onEnter={() => { setView('chapters'); window.scrollTo(0,0); }} 
+              />
             </motion.div>
-          );
-        })}
-
-        {/* BHAGAVAD GITA CAROUSEL */}
-        <motion.section
-          style={{
-            opacity: gitaOpacity,
-            z: gitaZ,
-            pointerEvents: useTransform(gitaOpacity, (val) =>
-              val > 0.1 ? "auto" : "none",
-            ),
-          }}
-          className="absolute inset-0 flex flex-col overflow-hidden [transform-style:preserve-3d]"
-        >
-          <div className="absolute top-16 left-0 right-0 z-20 text-center pointer-events-none">
-            <h2 className="sanskrit text-5xl md:text-6xl mb-4 grad-text drop-shadow-lg font-normal mb-2">
-              श्रीमद्भगवद्गीता
-            </h2>
-            <h3 className="font-serif text-2xl md:text-3xl opacity-80 text-shanti-gold">
-              The Bhagavad Gita
-            </h3>
-            <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] mt-6 opacity-50 text-shanti-ink">
-              18 Chapters of Wisdom
-            </p>
-          </div>
-
-          <div className="absolute inset-0 flex items-center justify-center [transform-style:preserve-3d]">
-            {loading ? (
-              <div className="w-full text-center opacity-50 tracking-widest text-sm uppercase">
-                Awakening truths...
-              </div>
-            ) : (
-              chapters.map((chapter, i) => (
-                <ChapterCard
-                  key={i}
-                  chapter={chapter}
-                  index={i}
-                  total={chapters.length}
-                  scrollYProgress={scrollYProgress}
-                  onClick={() => setActiveChapter(chapter)}
-                />
-              ))
-            )}
-          </div>
-        </motion.section>
-
-        {/* FOOTER SECTION */}
-        <motion.section
-          style={{
-            opacity: footerOpacity,
-            y: footerY,
-            pointerEvents: useTransform(footerOpacity, (val) =>
-              val > 0.5 ? "auto" : "none",
-            ),
-          }}
-          className="absolute inset-0 flex flex-col items-center justify-center bg-shanti-bg"
-        >
-          <div className="text-center space-y-12">
-            <h2 className="sanskrit text-4xl md:text-6xl opacity-80 leading-relaxed font-normal">
-              ॐ शान्तिः शान्तिः शान्तिः
-            </h2>
-            <div className="w-12 h-[1px] bg-shanti-ink/20 mx-auto" />
-            <div className="space-y-4">
-              <p className="text-[10px] tracking-[0.8em] uppercase opacity-40 font-light">
-                Crafted for Peace
-              </p>
-              <p className="text-[9px] font-light opacity-20">
-                प्रशान्ति — 2026
-              </p>
-            </div>
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="mt-16 group inline-flex flex-col items-center gap-4 cursor-pointer"
-            >
-              <div className="relative flex items-center justify-center w-10 h-10 rounded-full border border-shanti-ink/20 group-hover:border-shanti-gold/40 group-hover:bg-shanti-gold/5 transition-all duration-500">
-                <span className="text-sm opacity-50 group-hover:opacity-100 group-hover:text-shanti-gold group-hover:-translate-y-0.5 transition-all duration-500">
-                  ↑
-                </span>
-              </div>
-              <span className="text-[9px] tracking-[0.4em] uppercase opacity-40 group-hover:opacity-100 group-hover:text-shanti-gold transition-colors duration-500">
-                Return to Surface
-              </span>
-            </button>
-          </div>
-        </motion.section>
-
-        <AnimatePresence>
-          {activeChapter && (
-            <ChapterModal
-              chapter={activeChapter}
-              onClose={() => setActiveChapter(null)}
-            />
+          )}
+          {view === 'chapters' && (
+            <motion.div key="chapters" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <ChaptersView 
+                loading={loading} 
+                chapters={chapters} 
+                onSelectChapter={setActiveChapter} 
+              />
+            </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
+
+      <AnimatePresence>
+        {activeChapter && (
+          <ChapterModal
+            chapter={activeChapter}
+            onClose={() => setActiveChapter(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
+// ==========================================
+// HOME VIEW
+// ==========================================
+function HomeView({ onEnter }: { onEnter: () => void }) {
+  return (
+    <div className="flex flex-col items-center w-full">
+      {/* Hero */}
+      <section className="min-h-screen flex flex-col items-center justify-center relative w-full pt-20 pb-32">
+        <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none opacity-[0.02]">
+          <span className="sanskrit text-[80vw] md:text-[80vh] text-shanti-ink select-none leading-none drop-shadow-sm">ॐ</span>
+        </div>
+        
+        <div className="text-center relative z-10">
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="sanskrit text-6xl md:text-8xl lg:text-9xl text-shanti-ink mb-6 drop-shadow-2xl font-normal"
+          >
+            प्रशान्ति
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.6 }}
+            transition={{ delay: 0.5, duration: 1.5 }}
+            className="text-[10px] md:text-xs tracking-[1em] uppercase font-light ml-4"
+          >
+            Supreme Peace
+          </motion.p>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2, duration: 1.5 }}
+          className="absolute bottom-12 md:bottom-24 flex flex-col items-center"
+        >
+          <div className="text-[10px] tracking-[0.5em] uppercase font-medium opacity-50 mb-6">Scroll to Explore</div>
+          <div className="w-[1px] h-16 bg-gradient-to-b from-shanti-ink/50 to-transparent" />
+        </motion.div>
+      </section>
+
+      {/* Philosophies */}
+      <section className="w-full max-w-4xl mx-auto px-6 py-24 space-y-32">
+        {PHILOSOPHIES.map((phil, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="text-center glass rounded-3xl p-8 md:p-16 shadow-xl"
+          >
+            <h2 className="sanskrit text-4xl md:text-6xl mb-6 grad-text font-normal">
+              {phil.sanskrit}
+            </h2>
+            <h3 className="font-serif text-xl md:text-2xl mb-8 opacity-80">
+              {phil.name}
+            </h3>
+            <div className="w-12 h-[1px] bg-shanti-ink/20 mx-auto mb-8" />
+            <p className="text-base md:text-xl font-light italic leading-relaxed opacity-70">
+              "{phil.text}"
+            </p>
+          </motion.div>
+        ))}
+      </section>
+
+      {/* Call to Action */}
+      <section className="w-full py-32 flex flex-col items-center border-t border-shanti-gold/10 mt-16 bg-shanti-ink/5">
+        <h2 className="font-serif text-3xl md:text-4xl mb-12 opacity-90">Ready for the Wisdom?</h2>
+        <button
+          onClick={onEnter}
+          className="group flex flex-col items-center gap-6 cursor-pointer"
+        >
+          <div className="relative flex items-center justify-center w-16 h-16 rounded-full border border-shanti-gold/30 bg-shanti-gold/10 group-hover:bg-shanti-gold/20 transition-all duration-500 hover:scale-110 shadow-lg shadow-shanti-gold/5">
+            <span className="text-xl text-shanti-gold group-hover:translate-x-1 transition-transform">→</span>
+          </div>
+          <div className="text-[10px] md:text-xs tracking-[0.4em] uppercase font-medium opacity-70 group-hover:opacity-100 group-hover:text-shanti-gold transition-colors duration-500">
+            Open the Bhagavad Gita
+          </div>
+        </button>
+      </section>
+    </div>
+  );
+}
+
+// ==========================================
+// CHAPTERS VIEW
+// ==========================================
+function ChaptersView({ loading, chapters, onSelectChapter }: any) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.8 }}
+      className="min-h-screen py-32 flex flex-col"
+    >
+      <div className="text-center mb-16 px-6 relative z-10">
+        <h2 className="sanskrit text-4xl md:text-6xl mb-4 grad-text drop-shadow-lg font-normal mb-2">
+          श्रीमद्भगवद्गीता
+        </h2>
+        <h3 className="font-serif text-2xl md:text-3xl opacity-80 text-shanti-gold">
+          The Bhagavad Gita
+        </h3>
+        <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] mt-6 opacity-50 text-shanti-ink">
+          18 Chapters of Wisdom
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="flex-1 flex justify-center items-center opacity-50 tracking-widest text-sm uppercase">
+          Awakening truths...
+        </div>
+      ) : (
+        <div className="w-full flex-1 relative flex items-center py-10">
+          {/* Smooth native horizontal scroll container for mobile & desktop */}
+          <div className="w-full overflow-x-auto flex gap-6 md:gap-10 px-8 md:px-[20vw] pb-16 pt-8 snap-x snap-mandatory scrollbar-hide hide-scrollbar" style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
+            {chapters.map((chapter: any, i: number) => (
+              <div key={i} className="snap-center shrink-0 w-[85vw] md:w-[450px]">
+                <ChapterCard chapter={chapter} onClick={() => onSelectChapter(chapter)} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function ChapterCard({ chapter, onClick }: any) {
+  return (
+    <motion.div
+      onClick={onClick}
+      whileHover={{ y: -10, transition: { duration: 0.3 } }}
+      className="w-full h-full min-h-[500px] glass rounded-3xl p-8 md:p-10 cursor-pointer flex flex-col group overflow-hidden border border-shanti-gold/10 hover:border-shanti-gold/50 transition-colors duration-500 shadow-2xl shadow-shanti-gold/5 hover:shadow-shanti-gold/20 relative"
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-shanti-bg/50 to-shanti-bg/95 pointer-events-none z-0" />
+      <div className="absolute -top-32 -right-32 w-64 h-64 bg-shanti-gold/10 rounded-full blur-3xl group-hover:bg-shanti-gold/20 transition-all duration-700 z-0" />
+
+      <div className="relative z-10 flex-1 flex flex-col h-full pointer-events-none">
+        <div className="flex-1">
+          <div className="flex items-center gap-4 mb-8">
+            <span className="text-[10px] md:text-xs tracking-[0.4em] uppercase font-semibold text-shanti-gold">
+              Chapter
+            </span>
+            <span className="font-serif text-3xl opacity-100 drop-shadow-md">
+              {chapter.chapter_number}
+            </span>
+            <div className="flex-1 h-[1px] bg-gradient-to-r from-shanti-gold/40 to-transparent" />
+          </div>
+
+          <h4 className="sanskrit text-3xl md:text-4xl mb-4 grad-text drop-shadow-lg font-normal leading-tight">
+            {chapter.name}
+          </h4>
+          <h5 className="font-serif text-lg md:text-xl opacity-90 mb-6 text-shanti-ink">
+            {chapter.translation}
+          </h5>
+
+          <p className="font-light text-sm leading-relaxed text-shanti-ink/60 line-clamp-6 text-justify">
+            {chapter.summary?.en ||
+              chapter.meaning?.en ||
+              "In search of truth and profound realization."}
+          </p>
+        </div>
+
+        <div className="pt-6 mt-6 flex items-center justify-between border-t border-shanti-gold/20 group-hover:border-shanti-gold/50 transition-colors duration-500">
+          <span className="text-[10px] tracking-[0.3em] uppercase font-medium text-shanti-gold/60 group-hover:text-shanti-gold transition-colors duration-500">
+            Explore Verses
+          </span>
+          <div className="flex items-center justify-center w-12 h-12 rounded-full border border-shanti-gold/20 bg-shanti-gold/5 group-hover:bg-shanti-gold/20 transition-all duration-500">
+            <span className="text-sm text-shanti-gold group-hover:translate-x-1 transition-all duration-500">
+              →
+            </span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ==========================================
+// MODAL
+// ==========================================
 const ChapterModal = ({
   chapter,
   onClose,
@@ -431,7 +394,6 @@ const ChapterModal = ({
         </button>
 
         <div className="w-full flex flex-col md:flex-row gap-12 md:gap-20 items-start text-left mt-4">
-          {/* Left Column: Chapter Info */}
           <div className="flex-1 md:sticky top-0">
             <p className="text-xs tracking-[0.6em] uppercase text-shanti-gold/60 mb-6 flex items-center gap-4">
               <span className="w-8 h-[1px] bg-shanti-gold/30" />
@@ -463,7 +425,6 @@ const ChapterModal = ({
             </div>
           </div>
 
-          {/* Right Column: Verse Reader */}
           <div className="flex-1 w-full min-h-[450px] flex flex-col bg-shanti-ink/5 rounded-2xl p-6 md:p-10 border border-shanti-gold/10 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-shanti-gold/5 blur-[80px]" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-shanti-gold/5 blur-[80px]" />
@@ -535,95 +496,4 @@ const ChapterModal = ({
       </motion.div>
     </motion.div>
   );
-};
-
-const ChapterCard = ({
-  chapter,
-  index,
-  total,
-  scrollYProgress,
-  onClick,
-}: any) => {
-  // Logic for 3D positioning
-  const centerProgress = 0.45 + 0.45 * (index / Math.max(1, total - 1));
-  const cardRange = 0.45 / Math.max(1, total - 1);
-
-  const distance = useTransform(scrollYProgress, (val: number) => {
-    return (val - centerProgress) / cardRange;
-  });
-
-  const x = useTransform(
-    distance,
-    [-3, -1, 0, 1, 3],
-    ["120vw", "40vw", "0vw", "-40vw", "-120vw"],
-  );
-  const z = useTransform(
-    distance,
-    [-4, -2, 0, 2, 4],
-    [-2400, -800, 100, -800, -2400],
-  );
-  const rotateY = useTransform(
-    distance,
-    [-3, -1, 0, 1, 3],
-    [40, 20, 0, -20, -40],
-  );
-  const opacity = useTransform(
-    distance,
-    [-3, -1.5, -0.5, 0, 0.5, 1.5, 3],
-    [0, 0.3, 0.8, 1, 0.8, 0.3, 0],
-  );
-  const scale = useTransform(distance, [-2, 0, 2], [0.8, 1, 0.8]);
-  const pointerEvents = useTransform(distance, (val: number) =>
-    val > -0.5 && val < 0.5 ? "auto" : "none",
-  );
-
-  return (
-    <motion.div
-      onClick={onClick}
-      style={{ x, z, rotateY, opacity, scale, pointerEvents }}
-      whileHover={{ y: -10, transition: { duration: 0.3 } }}
-      className="absolute flex-shrink-0 w-[85vw] max-w-[450px] md:max-w-[500px] h-[65vh] max-h-[600px] md:max-h-[700px] glass rounded-3xl p-8 md:p-12 cursor-pointer flex flex-col group overflow-hidden border border-shanti-gold/10 hover:border-shanti-gold/50 transition-colors duration-500 shadow-2xl shadow-shanti-gold/5 hover:shadow-shanti-gold/20"
-    >
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-shanti-bg/95 pointer-events-none z-0" />
-      <div className="absolute -top-32 -right-32 w-64 h-64 bg-shanti-gold/10 rounded-full blur-3xl group-hover:bg-shanti-gold/20 transition-all duration-700 z-0" />
-
-      <div className="relative z-10 flex-1 flex flex-col h-full pointer-events-none">
-        <div className="flex-1">
-          <div className="flex items-center gap-4 mb-8">
-            <span className="text-[10px] md:text-xs tracking-[0.4em] uppercase font-semibold text-shanti-gold">
-              Chapter
-            </span>
-            <span className="font-serif text-3xl opacity-100 drop-shadow-md">
-              {chapter.chapter_number}
-            </span>
-            <div className="flex-1 h-[1px] bg-gradient-to-r from-shanti-gold/40 to-transparent" />
-          </div>
-
-          <h4 className="sanskrit text-4xl md:text-5xl mb-4 grad-text drop-shadow-lg font-normal leading-tight">
-            {chapter.name}
-          </h4>
-          <h5 className="font-serif text-xl opacity-90 mb-8 text-shanti-ink">
-            {chapter.translation}
-          </h5>
-
-          <p className="font-light text-sm leading-relaxed text-shanti-ink/50 line-clamp-6 text-justify">
-            {chapter.summary?.en ||
-              chapter.meaning?.en ||
-              "In search of truth and profound realization."}
-          </p>
-        </div>
-
-        <div className="pt-6 mt-6 flex items-center justify-between border-t border-shanti-gold/20 group-hover:border-shanti-gold/50 transition-colors duration-500">
-          <span className="text-[10px] tracking-[0.3em] uppercase font-medium text-shanti-gold/60 group-hover:text-shanti-gold transition-colors duration-500">
-            Explore Verses
-          </span>
-          <div className="flex items-center justify-center w-12 h-12 rounded-full border border-shanti-gold/20 bg-shanti-gold/5 group-hover:bg-shanti-gold/20 transition-all duration-500">
-            <span className="text-sm text-shanti-gold group-hover:translate-x-1 transition-all duration-500">
-              →
-            </span>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
+}
