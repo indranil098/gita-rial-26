@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Inter:wght@200;300;400&family=Tiro+Devanagari+Sanskrit&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cinzel", serif;
+  --font-sans: "Inter", sans-serif;
+  --font-sanskrit: "Tiro Devanagari Sanskrit", serif;
+  
+  --color-shanti-bg: #F2EFE9;
+  --color-shanti-ink: #2C2825;
+  --color-shanti-gold: #C2A878;
+  --color-shanti-sage: #B4BFA2;
+  --color-shanti-sand: #D5CEC4;
+}
+
+body {
+  background-color: var(--color-shanti-bg);
+  color: var(--color-shanti-ink);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sanskrit {
+  font-family: var(--font-sanskrit);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-shanti-sand);
+  border-radius: 10px;
+}
+
+.glass {
+  background: rgba(242, 239, 233, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+}
+
+.grad-text {
+  background: linear-gradient(to right, var(--color-shanti-ink), var(--color-shanti-gold));
+  -webkit-background-clip: text;
+  color: transparent;
+}
